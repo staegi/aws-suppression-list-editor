@@ -1,0 +1,10 @@
+node_modules
+package-lock.json
+bitbucket-pipelines.yml
+.git
+.gitignore
+.idea
+.eslintcache
+README.md
+build
+Dockerfile
