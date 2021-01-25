@@ -19,12 +19,12 @@ function SuppressionDestination(props) {
                 </span>
             </td>
             <td className="last-update-time">
-                <Moment tz="Europe/Berlin" fromNow withTitle titleFormat="ddd, Do MMM YYYY hh:mm" interval={1000}>
+                <Moment tz="Europe/Berlin" withTitle format="ddd, Do MMM YYYY hh:mm" interval={1000}>
                     {props.data.LastUpdateTime}
                 </Moment>
             </td>
             <td className="actions">
-                <Button variant="link" className="p-0" onClick={(e) => props.deleteAction(e, props.data)}>
+                <Button variant="link" className="p-0" onClick={(event) => props.deleteAction(event, props.data)}>
                     <Trash/>
                 </Button>
             </td>

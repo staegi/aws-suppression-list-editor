@@ -1,12 +1,12 @@
 import React from 'react';
 import Container from 'react-bootstrap/Container';
 import Table from 'react-bootstrap/Table';
+import Sorter from './Sorter';
 import Loader from './Loader';
 import moment from 'moment';
 import AWS from 'aws-sdk';
 import SESV2 from 'aws-sdk/clients/sesv2';
 import SuppressionDestination from "./SuppressionDestination";
-import {SortAlphaDown} from 'react-bootstrap-icons';
 import {sprintf} from 'sprintf-js';
 
 class List extends React.Component {
@@ -22,6 +22,8 @@ class List extends React.Component {
         this.state = {
             loading: true,
             results: [],
+            sortAscending: false,
+            sortField: 'LastUpdateTime',
         }
     }
 
@@ -57,6 +59,23 @@ class List extends React.Component {
         }, callback);
     }
 
+    async sortResults(event, accessor, ascending) {
+        this.setState({sortAscending: ascending, sortField: accessor});
+    }
+
+    compareItems(a, b) {
+        let valueA = a[this.state.sortField];
+        let valueB = b[this.state.sortField];
+
+        if (typeof valueA == 'string') valueA = valueA.toLowerCase();
+        if (typeof valueB == 'string') valueB = valueB.toLowerCase();
+
+        if (this.state.sortAscending) {
+            return valueA > valueB ? 1 : -1;
+        }
+        return valueA < valueB ? 1 : -1;
+    }
+
     async deleteDestination(event, destination) {
         if (!confirm(sprintf('Are you sure to delete %s?', destination.EmailAddress))) {
             return;
@@ -85,15 +104,26 @@ class List extends React.Component {
                     <Table responsive striped bordered hover variant="dark">
                         <thead>
                         <tr>
-                            <th>Email address <SortAlphaDown/></th>
-                            <th>Reason</th>
-                            <th>Last updated</th>
+                            <th>
+                                <Sorter title="Email address" accessor="EmailAddress" field={this.state.sortField}
+                                        ascending={this.state.sortAscending} action={this.sortResults.bind(this)}/>
+                            </th>
+                            <th>
+                                <Sorter title="Reason" accessor="Reason" field={this.state.sortField}
+                                        ascending={this.state.sortAscending} action={this.sortResults.bind(this)}/>
+                            </th>
+                            <th>
+                                <Sorter title="Last updated" accessor="LastUpdateTime" field={this.state.sortField}
+                                        ascending={this.state.sortAscending} action={this.sortResults.bind(this)} numeric/>
+                            </th>
                             <th>Actions</th>
                         </tr>
                         </thead>
-                        {this.state.results.sort((a, b) => a.EmailAddress.toLowerCase() > b.EmailAddress.toLowerCase() ? 1 : -1).map((item, index) =>
-                            <SuppressionDestination data={item} key={index} deleteAction={this.deleteDestination}/>
+                        <tbody>
+                        {this.state.results.sort((a, b) => this.compareItems(a, b)).map((item, index) =>
+                            <SuppressionDestination data={item} key={index} deleteAction={this.deleteDestination.bind(this)}/>
                         )}
+                        </tbody>
                     </Table>
                 </Container>
             );
