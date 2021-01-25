@@ -37,16 +37,15 @@ class List extends React.Component {
     }
 
     async fetchDestinations(nextToken = null, pageSize = 20) {
-        let that = this;
         let callback = function (error, data) {
             if (!error) {
-                let results = that.state.results.concat(data.SuppressedDestinationSummaries);
+                let results = this.state.results.concat(data.SuppressedDestinationSummaries);
                 if (data.NextToken) {
-                    that.fetchDestinations(data.NextToken, pageSize);
+                    this.fetchDestinations(data.NextToken, pageSize);
                 }
-                that.setState({results: results});
+                this.setState({results: results});
             }
-            that.setState({loading: false});
+            this.setState({loading: false});
         };
 
         let api = new SESV2({apiVersion: '2019-09-27'});
@@ -56,7 +55,7 @@ class List extends React.Component {
             EndDate: new Date(),
             Reasons: ['BOUNCE', 'COMPLAINT'],
             NextToken: nextToken,
-        }, callback);
+        }, callback.bind(this));
     }
 
     async sortResults(event, accessor, ascending) {
@@ -85,12 +84,14 @@ class List extends React.Component {
             if (error) {
                 alert(sprintf('Could not delete %s from the list.', destination.EmailAddress));
             } else {
-                // TODO: remove this item from the list
+                this.setState({results: this.state.results.filter(function (item){
+                    return item !== destination;
+                })});
             }
         };
 
         let api = new SESV2({apiVersion: '2019-09-27'});
-        api.deleteSuppressedDestination({EmailAddress: destination.EmailAddress}, callback);
+        api.deleteSuppressedDestination({EmailAddress: destination.EmailAddress}, callback.bind(this));
     }
 
     render() {
